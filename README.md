@@ -31,6 +31,7 @@ TOON achieves CSV-like compactness while adding explicit structure that helps LL
 - [Notes and Limitations](#notes-and-limitations)
 - [Syntax Cheatsheet](#syntax-cheatsheet)
 - [Other Implementations](#other-implementations)
+- [Community Tools & Resources](#community-tools--resources)
 
 ## Why TOON?
 
@@ -1247,6 +1248,21 @@ Task: Return only users with role "user" as TOON. Use the same header. Set [N] t
 - **R**: [toon](https://github.com/laresbernardo/toon)
 - **Ruby:** [toon-ruby](https://github.com/andrepcg/toon-ruby)
 - **Swift:** [TOONEncoder](https://github.com/mattt/TOONEncoder)
+
+## Community Tools & Resources
+
+### 🧰 TOON Tools
+
+**[toontools.vercel.app](https://toontools.vercel.app)** – A comprehensive web-based playground and tool suite for working with TOON format:
+
+- **Bidirectional Converters**: JSON ↔ TOON, CSV ↔ TOON, XML ↔ TOON, YAML ↔ TOON
+- **Token Counter**: Side-by-side comparison showing token savings between formats
+- **TOON Validator**: Real-time syntax validation and error detection
+- **Batch Converter**: Drag & drop multiple files for bulk conversion
+- **Format Playground**: Interactive environment for testing and experimenting with different formats
+- **API Endpoint Tester**: Test TOON-based API endpoints
+
+Built by the community to make TOON format more accessible and easier to work with.
 
 ## License
 
