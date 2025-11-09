@@ -17,8 +17,23 @@ TOON achieves CSV-like compactness while adding explicit structure that helps LL
 > [!TIP]
 > Think of TOON as a translation layer: use JSON programmatically, convert to TOON for LLM input.
 
+## 🎮 Online Playground
+
+Try TOON instantly in your browser with our interactive playground:
+
+**[Launch Playground →](http://localhost:3000)** *(Coming soon: hosted version)*
+
+Features:
+- **Bidirectional conversion**: JSON ↔ TOON in real-time
+- **Live editing**: See results as you type
+- **Encoding options**: Choose delimiters (comma, tab, pipe), adjust indentation, toggle length markers
+- **Token statistics**: Compare token usage between JSON and TOON
+- **Example datasets**: Pre-loaded examples for quick testing
+- **Copy to clipboard**: Easy copying of input and output
+
 ## Table of Contents
 
+- [🎮 Online Playground](#-online-playground)
 - [Why TOON?](#why-toon)
 - [Key Features](#key-features)
 - [Benchmarks](#benchmarks)

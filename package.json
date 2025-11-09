@@ -11,7 +11,9 @@
     "lint:fix": "eslint . --fix",
     "test": "pnpm -r test",
     "test:types": "tsc --noEmit",
-    "release": "bumpp -r"
+    "release": "bumpp -r",
+    "playground": "pnpm --filter @toon-format/playground dev",
+    "playground:build": "pnpm --filter @toon-format/playground build"
   },
   "devDependencies": {
     "@antfu/eslint-config": "^6.2.0",
