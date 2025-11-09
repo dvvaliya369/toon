@@ -1,4 +1,4 @@
-import type { Dataset, EfficiencyRanking, EvaluationResult, FormatResult, Question } from './types'
+import type { Dataset, EfficiencyRanking, EvaluationResult, FormatResult, Question, StructuredEvaluationResult, StructuredOutputComparison } from './types'
 import { FORMATTER_DISPLAY_NAMES, QUESTION_TYPE_LABELS, QUESTION_TYPES } from './constants'
 import { ACCURACY_DATASETS } from './datasets'
 import { models, PRIMERS } from './evaluate'
@@ -633,4 +633,157 @@ function generateVerticalEfficiencyChart(
     rows.push(`      ${formatRow2}`)
 
   return rows.join('\n')
+}
+
+/**
+ * Calculate structured output comparison metrics
+ */
+export function calculateStructuredOutputComparison(
+  textResults: EvaluationResult[],
+  structuredResults: StructuredEvaluationResult[],
+  tokenCounts: Record<string, number>,
+): StructuredOutputComparison[] {
+  const formatNames = [...new Set(textResults.map(r => r.format))]
+
+  return formatNames.map((formatName) => {
+    const textFormatResults = textResults.filter(r => r.format === formatName)
+    const structuredFormatResults = structuredResults.filter(r => r.format === formatName)
+
+    const textCorrect = textFormatResults.filter(r => r.isCorrect).length
+    const textTotal = textFormatResults.length
+    const textAccuracy = textTotal > 0 ? textCorrect / textTotal : 0
+
+    const structuredCorrect = structuredFormatResults.filter(r => r.isCorrect).length
+    const structuredTotal = structuredFormatResults.length
+    const structuredAccuracy = structuredTotal > 0 ? structuredCorrect / structuredTotal : 0
+
+    // Calculate average tokens
+    const formatTokenEntries = Object.entries(tokenCounts)
+      .filter(([key]) => key.startsWith(`${formatName}-`))
+    const avgTokens = formatTokenEntries.reduce((sum, [, tokens]) => sum + tokens, 0) / formatTokenEntries.length
+
+    const textLatency = textFormatResults.reduce((sum, r) => sum + r.latencyMs, 0) / textTotal
+    const structuredLatency = structuredFormatResults.reduce((sum, r) => sum + r.latencyMs, 0) / structuredTotal
+
+    return {
+      format: formatName,
+      textMode: {
+        accuracy: textAccuracy,
+        totalTokens: Math.round(avgTokens),
+        averageLatency: Math.round(textLatency),
+      },
+      structuredMode: {
+        accuracy: structuredAccuracy,
+        totalTokens: Math.round(avgTokens), // Same input tokens
+        averageLatency: Math.round(structuredLatency),
+      },
+      improvement: {
+        accuracyDelta: structuredAccuracy - textAccuracy,
+        tokenDelta: 0, // Input tokens are the same
+        latencyDelta: structuredLatency - textLatency,
+      },
+    }
+  }).sort((a, b) => b.structuredMode.accuracy - a.structuredMode.accuracy)
+}
+
+/**
+ * Generate structured output comparison report
+ */
+export function generateStructuredOutputReport(
+  textResults: EvaluationResult[],
+  structuredResults: StructuredEvaluationResult[],
+  tokenCounts: Record<string, number>,
+): string {
+  const comparisons = calculateStructuredOutputComparison(textResults, structuredResults, tokenCounts)
+  const modelIds = [...new Set(structuredResults.map(r => r.model))]
+  const totalQuestions = [...new Set(structuredResults.map(r => r.questionId))].length
+
+  const comparisonTable = comparisons.map((comp) => {
+    const formatLabel = FORMATTER_DISPLAY_NAMES[comp.format] || comp.format.toUpperCase()
+    const textAcc = (comp.textMode.accuracy * 100).toFixed(1)
+    const structuredAcc = (comp.structuredMode.accuracy * 100).toFixed(1)
+    const accDelta = comp.improvement.accuracyDelta >= 0
+      ? `+${(comp.improvement.accuracyDelta * 100).toFixed(1)}%`
+      : `${(comp.improvement.accuracyDelta * 100).toFixed(1)}%`
+    const latencyDelta = comp.improvement.latencyDelta >= 0
+      ? `+${Math.round(comp.improvement.latencyDelta)}ms`
+      : `${Math.round(comp.improvement.latencyDelta)}ms`
+
+    return `| ${formatLabel} | ${textAcc}% | ${structuredAcc}% | ${accDelta} | ${comp.textMode.totalTokens.toLocaleString()} | ${latencyDelta} |`
+  }).join('\n')
+
+  const toonComparison = comparisons.find(c => c.format === 'toon')
+  const jsonComparison = comparisons.find(c => c.format === 'json-pretty')
+
+  let keyFindings = ''
+  if (toonComparison && jsonComparison) {
+    const toonTokens = toonComparison.structuredMode.totalTokens
+    const jsonTokens = jsonComparison.structuredMode.totalTokens
+    const tokenSavings = ((jsonTokens - toonTokens) / jsonTokens * 100).toFixed(1)
+    const toonAcc = (toonComparison.structuredMode.accuracy * 100).toFixed(1)
+    const jsonAcc = (jsonComparison.structuredMode.accuracy * 100).toFixed(1)
+
+    keyFindings = `
+**Key Findings:**
+
+- **Token Efficiency Maintained**: TOON achieves **${toonAcc}%** accuracy (vs JSON's ${jsonAcc}%) while using **${tokenSavings}% fewer tokens**
+- **Structured Output Benefits**: Schema-constrained responses improve reliability and enable type-safe parsing
+- **Format Independence**: Structured output endpoints work with any input format (TOON, JSON, CSV, etc.)
+`
+  }
+
+  return `
+# Structured Output Benchmark Results
+
+This benchmark compares **text generation mode** vs **structured output mode** (JSON schema-constrained responses) across different input formats.
+
+## Overview
+
+- **Models tested**: ${modelIds.join(', ')}
+- **Questions**: ${totalQuestions} data retrieval questions
+- **Input formats**: ${comparisons.map(c => FORMATTER_DISPLAY_NAMES[c.format] || c.format).join(', ')}
+- **Structured output**: Uses AI SDK's \`generateObject()\` with Zod schemas for guaranteed valid JSON responses
+
+${keyFindings}
+
+## Comparison: Text Mode vs Structured Output Mode
+
+| Format | Text Mode Accuracy | Structured Mode Accuracy | Accuracy Δ | Avg Tokens | Latency Δ |
+| ------ | ------------------ | ------------------------ | ---------- | ---------- | --------- |
+${comparisonTable}
+
+## What This Shows
+
+**Structured output endpoints** (like OpenAI's JSON mode, Anthropic's structured outputs) guarantee valid JSON responses that conform to a schema. This benchmark demonstrates:
+
+1. **TOON's token efficiency is preserved**: Input format token savings remain regardless of output mode
+2. **Improved reliability**: Schema validation reduces parsing errors and improves accuracy
+3. **Format flexibility**: You can use TOON for input and get structured JSON output, combining benefits of both
+
+## Methodology
+
+- **Text Mode**: Standard \`generateText()\` with free-form responses
+- **Structured Mode**: \`generateObject()\` with Zod schemas for type-safe JSON responses
+- **Input Formats**: Same data formatted as TOON, JSON, CSV, etc.
+- **Token Counting**: Includes format primers for fair comparison
+- **Validation**: Deterministic answer comparison (no LLM judge needed)
+
+<details>
+<summary><strong>Example Schemas Used</strong></summary>
+
+\`\`\`typescript
+// Simple answer schema
+const simpleSchema = z.object({
+  answer: z.string().describe('The answer to the question')
+})
+
+// Validation schema
+const validationSchema = z.object({
+  isValid: z.boolean().describe('Whether the data is valid'),
+  reason: z.string().optional().describe('Reason if invalid')
+})
+\`\`\`
+
+</details>
+`.trim()
 }

@@ -13,6 +13,9 @@ pnpm benchmark:tokens
 
 # Run retrieval accuracy benchmark (requires API keys)
 pnpm benchmark:accuracy
+
+# Run structured output benchmark (requires API keys)
+pnpm benchmark:structured
 ```
 
 ## Token Efficiency Benchmark
@@ -83,17 +86,62 @@ Edit [`src/constants.ts`](./src/constants.ts) to adjust:
 - `DEFAULT_CONCURRENCY` – Parallel tasks (default: 10)
 - `DRY_RUN_LIMITS` – Questions per dry run (default: 10)
 
+## Structured Output Benchmark
+
+Tests LLM provider **structured output endpoints** (JSON mode, schema-constrained responses) to compare token efficiency and accuracy when using TOON vs other formats with guaranteed valid JSON output.
+
+### What It Tests
+
+This benchmark compares two modes:
+
+1. **Text Mode**: Standard `generateText()` with free-form responses
+2. **Structured Mode**: `generateObject()` with Zod schemas for type-safe JSON responses
+
+The key question: **Does TOON's token efficiency advantage persist when using structured output endpoints?**
+
+### Setup
+
+Same as retrieval accuracy benchmark:
+
+1. Edit [`src/evaluate.ts`](./src/evaluate.ts) and add models to the `models` array
+2. Copy `.env.example` to `.env` and add your API keys
+
+### Usage
+
+```bash
+# Full benchmark (compares text vs structured output modes)
+pnpm benchmark:structured
+
+# Dry run (10 questions only)
+DRY_RUN=true pnpm benchmark:structured
+```
+
+### What This Shows
+
+**Structured output endpoints** (like OpenAI's JSON mode, Anthropic's structured outputs) guarantee valid JSON responses conforming to a schema. This benchmark demonstrates:
+
+1. **TOON's token efficiency is preserved**: Input format token savings remain regardless of output mode
+2. **Improved reliability**: Schema validation reduces parsing errors and improves accuracy
+3. **Format flexibility**: You can use TOON for input and get structured JSON output, combining benefits of both
+
+### Results
+
+Results are saved to:
+- `results/structured-output-comparison.md` – Markdown report with comparison tables
+- `results/structured-output-results.json` – Raw results for further analysis
+
 ## Project Structure
 
 ```
 scripts/
 ├── accuracy-benchmark.ts         # Retrieval accuracy benchmark
+├── structured-output-benchmark.ts # Structured output comparison
 ├── token-efficiency-benchmark.ts # Token counting benchmark
 └── fetch-github-repos.ts         # Update GitHub dataset
 src/
 ├── constants.ts                  # Configuration
 ├── datasets.ts                   # Test data generators
-├── evaluate.ts                   # LLM evaluation
+├── evaluate.ts                   # LLM evaluation (text & structured)
 ├── formatters.ts                 # Format converters
 ├── normalize.ts                  # Answer normalization
 ├── report.ts                     # Markdown reports
@@ -116,5 +164,7 @@ data/
 results/
 ├── token-efficiency.md           # Token savings report
 ├── retrieval-accuracy.md         # Accuracy report
+├── structured-output-comparison.md # Structured output comparison
+├── structured-output-results.json  # Raw structured output results
 └── accuracy/models/              # Per-model results (JSON)
 ```

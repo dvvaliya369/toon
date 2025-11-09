@@ -47,6 +47,11 @@ export interface EvaluationResult {
   latencyMs: number
 }
 
+export interface StructuredEvaluationResult extends EvaluationResult {
+  structuredOutput: true
+  rawObject: Record<string, any>
+}
+
 export interface FormatResult {
   format: string
   accuracy: number
@@ -61,4 +66,23 @@ export interface EfficiencyRanking {
   efficiency: number
   accuracy: number
   tokens: number
+}
+
+export interface StructuredOutputComparison {
+  format: string
+  textMode: {
+    accuracy: number
+    totalTokens: number
+    averageLatency: number
+  }
+  structuredMode: {
+    accuracy: number
+    totalTokens: number
+    averageLatency: number
+  }
+  improvement: {
+    accuracyDelta: number
+    tokenDelta: number
+    latencyDelta: number
+  }
 }

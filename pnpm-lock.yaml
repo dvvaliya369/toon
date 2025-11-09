@@ -40,19 +40,19 @@ importers:
     devDependencies:
       '@ai-sdk/anthropic':
         specifier: ^2.0.40
-        version: 2.0.40(zod@4.1.12)
+        version: 2.0.40(zod@3.25.76)
       '@ai-sdk/google':
         specifier: ^2.0.26
-        version: 2.0.26(zod@4.1.12)
+        version: 2.0.26(zod@3.25.76)
       '@ai-sdk/openai':
         specifier: ^2.0.59
-        version: 2.0.59(zod@4.1.12)
+        version: 2.0.59(zod@3.25.76)
       '@ai-sdk/provider':
         specifier: ^2.0.0
         version: 2.0.0
       '@ai-sdk/xai':
         specifier: ^2.0.30
-        version: 2.0.30(zod@4.1.12)
+        version: 2.0.30(zod@3.25.76)
       '@clack/prompts':
         specifier: ^0.11.0
         version: 0.11.0
@@ -61,7 +61,7 @@ importers:
         version: 10.1.0
       ai:
         specifier: ^5.0.86
-        version: 5.0.86(zod@4.1.12)
+        version: 5.0.86(zod@3.25.76)
       csv-stringify:
         specifier: ^6.6.0
         version: 6.6.0
@@ -86,6 +86,9 @@ importers:
       yaml:
         specifier: ^2.8.1
         version: 2.8.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
 
   packages/cli:
     dependencies:
@@ -2470,62 +2473,62 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@4.1.12:
-    resolution: {integrity: sha512-JInaHOamG8pt5+Ey8kGmdcAcg3OL9reK8ltczgHTAwNhMys/6ThXHityHxVV2p3fkw/c+MAvBHFVYHFZDmjMCQ==}
+  zod@3.25.76:
+    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
 
   zwitch@2.0.4:
     resolution: {integrity: sha512-bXE4cR/kVZhKZX/RjPEflHaKVhUVl85noU3v6b8apfQEc1x4A+zBxjZ4lN8LqGd6WZ3dl98pY4o717VFmoPp+A==}
 
 snapshots:
 
-  '@ai-sdk/anthropic@2.0.40(zod@4.1.12)':
+  '@ai-sdk/anthropic@2.0.40(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
-      zod: 4.1.12
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/gateway@2.0.5(zod@4.1.12)':
+  '@ai-sdk/gateway@2.0.5(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
       '@vercel/oidc': 3.0.3
-      zod: 4.1.12
+      zod: 3.25.76
 
-  '@ai-sdk/google@2.0.26(zod@4.1.12)':
+  '@ai-sdk/google@2.0.26(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
-      zod: 4.1.12
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/openai-compatible@1.0.25(zod@4.1.12)':
+  '@ai-sdk/openai-compatible@1.0.25(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
-      zod: 4.1.12
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/openai@2.0.59(zod@4.1.12)':
+  '@ai-sdk/openai@2.0.59(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
-      zod: 4.1.12
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
+      zod: 3.25.76
 
-  '@ai-sdk/provider-utils@3.0.15(zod@4.1.12)':
+  '@ai-sdk/provider-utils@3.0.15(zod@3.25.76)':
     dependencies:
       '@ai-sdk/provider': 2.0.0
       '@standard-schema/spec': 1.0.0
       eventsource-parser: 3.0.6
-      zod: 4.1.12
+      zod: 3.25.76
 
   '@ai-sdk/provider@2.0.0':
     dependencies:
       json-schema: 0.4.0
 
-  '@ai-sdk/xai@2.0.30(zod@4.1.12)':
+  '@ai-sdk/xai@2.0.30(zod@3.25.76)':
     dependencies:
-      '@ai-sdk/openai-compatible': 1.0.25(zod@4.1.12)
+      '@ai-sdk/openai-compatible': 1.0.25(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
-      zod: 4.1.12
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
+      zod: 3.25.76
 
   '@antfu/eslint-config@6.2.0(@vue/compiler-sfc@3.5.22)(eslint@9.39.0(jiti@2.6.1))(typescript@5.9.3)(vitest@4.0.6(@types/debug@4.1.12)(@types/node@24.9.2)(jiti@2.6.1)(tsx@4.20.6)(yaml@2.8.1))':
     dependencies:
@@ -3259,13 +3262,13 @@ snapshots:
 
   acorn@8.15.0: {}
 
-  ai@5.0.86(zod@4.1.12):
+  ai@5.0.86(zod@3.25.76):
     dependencies:
-      '@ai-sdk/gateway': 2.0.5(zod@4.1.12)
+      '@ai-sdk/gateway': 2.0.5(zod@3.25.76)
       '@ai-sdk/provider': 2.0.0
-      '@ai-sdk/provider-utils': 3.0.15(zod@4.1.12)
+      '@ai-sdk/provider-utils': 3.0.15(zod@3.25.76)
       '@opentelemetry/api': 1.9.0
-      zod: 4.1.12
+      zod: 3.25.76
 
   ajv@6.12.6:
     dependencies:
@@ -4895,6 +4898,6 @@ snapshots:
 
   yocto-queue@0.1.0: {}
 
-  zod@4.1.12: {}
+  zod@3.25.76: {}
 
   zwitch@2.0.4: {}
