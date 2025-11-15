@@ -1,5 +1,6 @@
 import type { BlankLineInfo, Depth, ParsedLine } from '../types'
 import { SPACE, TAB } from '../constants'
+import { formatIndentationError, formatParseError } from '../shared/error-utils'
 
 export interface ScanResult {
   lines: ParsedLine[]
@@ -99,12 +100,20 @@ export function toParsedLines(source: string, indentSize: number, strict: boolea
 
       // Check for tabs in leading whitespace (before actual content)
       if (raw.slice(0, wsEnd).includes(TAB)) {
-        throw new SyntaxError(`Line ${lineNumber}: Tabs are not allowed in indentation in strict mode`)
+        const message = formatParseError(
+          'Tabs are not allowed in indentation in strict mode',
+          lineNumber,
+          raw,
+          `Replace tabs with spaces. Use ${indentSize} spaces per indentation level, or use --no-strict mode`,
+        )
+        throw new SyntaxError(message)
       }
 
       // Check for exact multiples of indentSize
       if (indent > 0 && indent % indentSize !== 0) {
-        throw new SyntaxError(`Line ${lineNumber}: Indentation must be exact multiple of ${indentSize}, but found ${indent} spaces`)
+        const expectedIndent = `${Math.floor(indent / indentSize) * indentSize} or ${Math.ceil(indent / indentSize) * indentSize} spaces`
+        const message = formatIndentationError(lineNumber, expectedIndent, indent, indentSize)
+        throw new SyntaxError(message)
       }
     }
 

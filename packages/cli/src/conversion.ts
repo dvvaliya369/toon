@@ -23,7 +23,13 @@ export async function encodeToToon(config: {
     data = JSON.parse(jsonContent)
   }
   catch (error) {
-    throw new Error(`Failed to parse JSON: ${error instanceof Error ? error.message : String(error)}`)
+    const inputLabel = formatInputLabel(config.input)
+    const errorMsg = error instanceof Error ? error.message : String(error)
+    throw new Error(
+      `Failed to parse JSON from ${inputLabel}\n\n`
+      + `Error: ${errorMsg}\n\n`
+      + `→ Ensure the input is valid JSON format`,
+    )
   }
 
   const encodeOptions: EncodeOptions = {
@@ -73,7 +79,19 @@ export async function decodeToJson(config: {
     data = decode(toonContent, decodeOptions)
   }
   catch (error) {
-    throw new Error(`Failed to decode TOON: ${error instanceof Error ? error.message : String(error)}`)
+    const inputLabel = formatInputLabel(config.input)
+    const errorMsg = error instanceof Error ? error.message : String(error)
+
+    // Check if it's a validation error in strict mode
+    const isValidationError = errorMsg.includes('Expected') && errorMsg.includes('but')
+    const strictHint = config.strict && isValidationError
+      ? '\n\n→ Try using --no-strict mode to skip validation checks'
+      : ''
+
+    throw new Error(
+      `Failed to decode TOON from ${inputLabel}\n\n`
+      + `${errorMsg}${strictHint}`,
+    )
   }
 
   const jsonOutput = JSON.stringify(data, undefined, config.indent)

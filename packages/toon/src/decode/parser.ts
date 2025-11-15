@@ -134,7 +134,10 @@ export function parseBracketSegment(
 
   const length = Number.parseInt(content, 10)
   if (Number.isNaN(length)) {
-    throw new TypeError(`Invalid array length: ${seg}`)
+    throw new TypeError(
+      `Invalid array length in bracket segment: [${seg}]\n`
+      + `  → Array length must be a valid number (e.g., [5], [#10], [3|])`,
+    )
   }
 
   return { length, delimiter, hasLengthMarker }
@@ -237,11 +240,19 @@ export function parseStringLiteral(token: string): string {
 
     if (closingQuoteIndex === -1) {
       // No closing quote was found
-      throw new SyntaxError('Unterminated string: missing closing quote')
+      throw new SyntaxError(
+        `Unterminated string: missing closing quote\n`
+        + `  | ${trimmedToken}\n`
+        + `  → Add a closing double quote (") at the end of the string`,
+      )
     }
 
     if (closingQuoteIndex !== trimmedToken.length - 1) {
-      throw new SyntaxError('Unexpected characters after closing quote')
+      throw new SyntaxError(
+        `Unexpected characters after closing quote\n`
+        + `  | ${trimmedToken}\n`
+        + `  → Remove characters after the closing quote, or include them inside the quoted string`,
+      )
     }
 
     const content = trimmedToken.slice(1, closingQuoteIndex)
@@ -259,7 +270,11 @@ export function parseUnquotedKey(content: string, start: number): { key: string,
 
   // Validate that a colon was found
   if (end >= content.length || content[end] !== COLON) {
-    throw new SyntaxError('Missing colon after key')
+    throw new SyntaxError(
+      `Missing colon after key\n`
+      + `  | ${content}\n`
+      + `  → Add a colon (:) after the key name`,
+    )
   }
 
   const key = content.slice(start, end).trim()
@@ -275,7 +290,11 @@ export function parseQuotedKey(content: string, start: number): { key: string, e
   const closingQuoteIndex = findClosingQuote(content, start)
 
   if (closingQuoteIndex === -1) {
-    throw new SyntaxError('Unterminated quoted key')
+    throw new SyntaxError(
+      `Unterminated quoted key: missing closing quote\n`
+      + `  | ${content}\n`
+      + `  → Add a closing double quote (") after the key name`,
+    )
   }
 
   // Extract and unescape the key content
@@ -285,7 +304,11 @@ export function parseQuotedKey(content: string, start: number): { key: string, e
 
   // Validate and skip colon after quoted key
   if (end >= content.length || content[end] !== COLON) {
-    throw new SyntaxError('Missing colon after key')
+    throw new SyntaxError(
+      `Missing colon after quoted key\n`
+      + `  | ${content}\n`
+      + `  → Add a colon (:) after the closing quote`,
+    )
   }
   end++
 

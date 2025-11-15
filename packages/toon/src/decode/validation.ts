@@ -1,6 +1,7 @@
 import type { ArrayHeaderInfo, BlankLineInfo, Delimiter, Depth, ResolvedDecodeOptions } from '../types'
 import type { LineCursor } from './scanner'
 import { COLON, LIST_ITEM_PREFIX } from '../constants'
+import { formatParseError, formatValidationError } from '../shared/error-utils'
 
 /**
  * Asserts that the actual count matches the expected count in strict mode.
@@ -9,6 +10,7 @@ import { COLON, LIST_ITEM_PREFIX } from '../constants'
  * @param expected The expected count
  * @param itemType The type of items being counted (e.g., `list array items`, `tabular rows`)
  * @param options Decode options
+ * @param startLine Optional line number where the array starts
  * @throws RangeError if counts don't match in strict mode
  */
 export function assertExpectedCount(
@@ -16,9 +18,16 @@ export function assertExpectedCount(
   expected: number,
   itemType: string,
   options: ResolvedDecodeOptions,
+  startLine?: number,
 ): void {
   if (options.strict && actual !== expected) {
-    throw new RangeError(`Expected ${expected} ${itemType}, but got ${actual}`)
+    const diff = actual - expected
+    const diffText = diff > 0 ? `${diff} too many` : `${Math.abs(diff)} too few`
+    const suggestion = `Found ${diffText} items. Update the array length in the header to [${actual}], or adjust the number of items to match [${expected}]`
+
+    throw new RangeError(
+      formatValidationError(expected, actual, itemType, startLine, suggestion),
+    )
   }
 }
 
@@ -28,19 +37,27 @@ export function assertExpectedCount(
  * @param cursor The line cursor
  * @param itemDepth The expected depth of items
  * @param expectedCount The expected number of items
+ * @param startLine The line number where the array header is defined
  * @throws RangeError if extra items are found
  */
 export function validateNoExtraListItems(
   cursor: LineCursor,
   itemDepth: Depth,
   expectedCount: number,
+  startLine: number,
 ): void {
   if (cursor.atEnd())
     return
 
   const nextLine = cursor.peek()
   if (nextLine && nextLine.depth === itemDepth && nextLine.content.startsWith(LIST_ITEM_PREFIX)) {
-    throw new RangeError(`Expected ${expectedCount} list array items, but found more`)
+    const message = formatParseError(
+      `Array length mismatch: header declares [${expectedCount}] items, but more items found`,
+      nextLine.lineNumber,
+      nextLine.content,
+      `Remove extra items or update the array length in the header (line ${startLine}) to match the actual count`,
+    )
+    throw new RangeError(message)
   }
 }
 
@@ -50,12 +67,14 @@ export function validateNoExtraListItems(
  * @param cursor The line cursor
  * @param rowDepth The expected depth of rows
  * @param header The array header info containing length and delimiter
+ * @param startLine The line number where the array header is defined
  * @throws RangeError if extra rows are found
  */
 export function validateNoExtraTabularRows(
   cursor: LineCursor,
   rowDepth: Depth,
   header: ArrayHeaderInfo,
+  startLine: number,
 ): void {
   if (cursor.atEnd())
     return
@@ -67,7 +86,13 @@ export function validateNoExtraTabularRows(
     && !nextLine.content.startsWith(LIST_ITEM_PREFIX)
     && isDataRow(nextLine.content, header.delimiter)
   ) {
-    throw new RangeError(`Expected ${header.length} tabular rows, but found more`)
+    const message = formatParseError(
+      `Tabular array length mismatch: header declares [${header.length}] rows, but more rows found`,
+      nextLine.lineNumber,
+      nextLine.content,
+      `Remove extra rows or update the array length in the header (line ${startLine}) to match the actual count`,
+    )
+    throw new RangeError(message)
   }
 }
 
@@ -103,9 +128,14 @@ export function validateNoBlankLinesInRange(
   )
 
   if (blanksInRange.length > 0) {
-    throw new SyntaxError(
-      `Line ${blanksInRange[0]!.lineNumber}: Blank lines inside ${context} are not allowed in strict mode`,
+    const blankLine = blanksInRange[0]!
+    const message = formatParseError(
+      `Blank lines inside ${context} are not allowed in strict mode`,
+      blankLine.lineNumber,
+      undefined,
+      `Remove the blank line, or use --no-strict mode to allow blank lines`,
     )
+    throw new SyntaxError(message)
   }
 }
 

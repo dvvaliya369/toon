@@ -1,6 +1,7 @@
 import type { ArrayHeaderInfo, Depth, JsonArray, JsonObject, JsonPrimitive, JsonValue, ParsedLine, ResolvedDecodeOptions } from '../types'
 import type { LineCursor } from './scanner'
 import { COLON, DEFAULT_DELIMITER, LIST_ITEM_PREFIX } from '../constants'
+import { formatParseError } from '../shared/error-utils'
 import { findClosingQuote } from '../shared/string-utils'
 import { isArrayHeaderAfterHyphen, isObjectFirstFieldAfterHyphen, mapRowValuesToPrimitives, parseArrayHeaderLine, parseDelimitedValues, parseKeyToken, parsePrimitiveToken } from './parser'
 import { assertExpectedCount, validateNoBlankLinesInRange, validateNoExtraListItems, validateNoExtraTabularRows } from './validation'
@@ -10,7 +11,7 @@ import { assertExpectedCount, validateNoBlankLinesInRange, validateNoExtraListIt
 export function decodeValueFromLines(cursor: LineCursor, options: ResolvedDecodeOptions): JsonValue {
   const first = cursor.peek()
   if (!first) {
-    throw new ReferenceError('No content to decode')
+    throw new ReferenceError('No content to decode. The input appears to be empty or contains only whitespace.')
   }
 
   // Check for root array
@@ -221,7 +222,7 @@ function decodeListArray(
     }
   }
 
-  assertExpectedCount(items.length, header.length, 'list array items', options)
+  assertExpectedCount(items.length, header.length, 'list array items', options, startLine)
 
   // In strict mode, check for blank lines inside the array
   if (options.strict && startLine !== undefined && endLine !== undefined) {
@@ -236,7 +237,7 @@ function decodeListArray(
 
   // In strict mode, check for extra items
   if (options.strict) {
-    validateNoExtraListItems(cursor, itemDepth, header.length)
+    validateNoExtraListItems(cursor, itemDepth, header.length, startLine ?? 0)
   }
 
   return items
@@ -270,7 +271,7 @@ function decodeTabularArray(
 
       cursor.advance()
       const values = parseDelimitedValues(line.content, header.delimiter)
-      assertExpectedCount(values.length, header.fields!.length, 'tabular row values', options)
+      assertExpectedCount(values.length, header.fields!.length, 'tabular row values', options, line.lineNumber)
 
       const primitives = mapRowValuesToPrimitives(values)
       const obj: JsonObject = {}
@@ -286,7 +287,7 @@ function decodeTabularArray(
     }
   }
 
-  assertExpectedCount(objects.length, header.length, 'tabular rows', options)
+  assertExpectedCount(objects.length, header.length, 'tabular rows', options, startLine)
 
   // In strict mode, check for blank lines inside the array
   if (options.strict && startLine !== undefined && endLine !== undefined) {
@@ -301,7 +302,7 @@ function decodeTabularArray(
 
   // In strict mode, check for extra rows
   if (options.strict) {
-    validateNoExtraTabularRows(cursor, rowDepth, header)
+    validateNoExtraTabularRows(cursor, rowDepth, header, startLine ?? 0)
   }
 
   return objects
@@ -332,7 +333,13 @@ function decodeListItem(
     afterHyphen = line.content.slice(LIST_ITEM_PREFIX.length)
   }
   else {
-    throw new SyntaxError(`Expected list item to start with "${LIST_ITEM_PREFIX}"`)
+    const message = formatParseError(
+      `Expected list item to start with "${LIST_ITEM_PREFIX}"`,
+      line.lineNumber,
+      line.content,
+      'List items must begin with a hyphen followed by a space (- )',
+    )
+    throw new SyntaxError(message)
   }
 
   // Empty content after list item should also be an empty object

@@ -1,4 +1,5 @@
 import { BACKSLASH, CARRIAGE_RETURN, DOUBLE_QUOTE, NEWLINE, TAB } from '../constants'
+import { formatInvalidEscapeError } from './error-utils'
 
 /**
  * Escapes special characters in a string for encoding.
@@ -28,7 +29,7 @@ export function unescapeString(value: string): string {
   while (i < value.length) {
     if (value[i] === BACKSLASH) {
       if (i + 1 >= value.length) {
-        throw new SyntaxError('Invalid escape sequence: backslash at end of string')
+        throw new SyntaxError(formatInvalidEscapeError('\\', undefined, value))
       }
 
       const next = value[i + 1]
@@ -58,7 +59,7 @@ export function unescapeString(value: string): string {
         continue
       }
 
-      throw new SyntaxError(`Invalid escape sequence: \\${next}`)
+      throw new SyntaxError(formatInvalidEscapeError(`\\${next}`, undefined, value))
     }
 
     result += value[i]
